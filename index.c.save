@@ -15,7 +15,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <dirent.h>
-
 // ─── PROVIDED ────────────────────────────────────────────────────────────────
 
 IndexEntry* index_find(Index *index, const char *path) {
@@ -194,8 +193,7 @@ int index_save(const Index *index) {
                 copy.entries[i].mtime_sec,
                 copy.entries[i].size,
                 copy.entries[i].path);
-    }
-
+    
     fflush(fp);
     fsync(fileno(fp));
     fclose(fp);
@@ -208,50 +206,16 @@ int index_save(const Index *index) {
 
 int index_add(Index *idx, const char *path) {
     struct stat st;
-    if (stat(path, &st) != 0) return -1;
+    if (stat(path, &st) != 0)
+        return -1;
 
     FILE *fp = fopen(path, "rb");
-    if (!fp) return -1;
+    if (!fp)
+        return -1;
 
     size_t sz = (size_t)st.st_size;
-    unsigned char *buf = malloc(sz ? sz : 1);
+
+    void *buf = malloc(sz > 0 ? sz : 1);
     if (!buf) {
         fclose(fp);
-        return -1;
-    }
-
-    if (sz > 0) {
-        if (fread(buf, 1, sz, fp) != sz) {
-            free(buf);
-            fclose(fp);
-            return -1;
-        }
-    }
-
-    fclose(fp);
-
-    ObjectID oid;
-    if (object_write(OBJ_BLOB, buf, sz, &oid) != 0) {
-        free(buf);
-        return -1;
-    }
-
-    free(buf);
-
-    IndexEntry *e = index_find(idx, path);
-
-    if (!e) {
-        if (idx->count >= MAX_INDEX_ENTRIES) return -1;
-        e = &idx->entries[idx->count++];
-    }
-
-    e->mode = 0100644;
-    e->hash = oid;
-    e->mtime_sec = (uint64_t)st.st_mtime;
-    e->size = (uint32_t)st.st_size;
-
-    strncpy(e->path, path, sizeof(e->path) - 1);
-    e->path[sizeof(e->path) - 1] = '\0';
-
-    return index_save(idx);
-}
+  
