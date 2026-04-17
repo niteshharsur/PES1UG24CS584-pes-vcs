@@ -51,7 +51,8 @@ int index_status(const Index *index) {
     int staged = 0;
 
     for (int i = 0; i < index->count; i++) {
-        printf("  staged:     %s\n", index->entries[i].path);
+cd ~/PES1UG24CS584-pes-vcs
+nano index.c        printf("  staged:     %s\n", index->entries[i].path);
         staged++;
     }
 
@@ -204,17 +205,17 @@ int index_save(const Index *index) {
     return 0;
 }
 
-/* Replace ONLY the index_add() function in index.c with this exact code */
-
 int index_add(Index *idx, const char *path) {
     struct stat st;
-    if (stat(path, &st) != 0) return -1;
+    if (stat(path, &st) != 0)
+        return -1;
 
     FILE *fp = fopen(path, "rb");
-    if (!fp) return -1;
+    if (!fp)
+        return -1;
 
     size_t sz = (size_t)st.st_size;
-    unsigned char *buf = malloc(sz ? sz : 1);
+    char *buf = malloc(sz + 1);
     if (!buf) {
         fclose(fp);
         return -1;
@@ -240,8 +241,10 @@ int index_add(Index *idx, const char *path) {
 
     IndexEntry *e = index_find(idx, path);
 
-    if (!e) {
-        if (idx->count >= MAX_INDEX_ENTRIES) return -1;
+    if (e == NULL) {
+        if (idx->count >= MAX_INDEX_ENTRIES)
+            return -1;
+
         e = &idx->entries[idx->count++];
     }
 
