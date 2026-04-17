@@ -140,6 +140,26 @@ int tree_from_index(ObjectID *id_out) {
     if (index_load(&idx) != 0)
         return -1;
 
+    for (int i = 0; i < idx.count && tree.count < MAX_TREE_ENTRIES; i++) {
+        TreeEntry *e = &tree.entries[tree.count];
+
+        e->mode = idx.entries[i].mode;
+        e->hash = idx.entries[i].hash;
+
+        const char *path = idx.entries[i].path;
+        const char *base = strrchr(path, '/');
+
+        if (base)
+            base++;
+        else
+            base = path;
+
+        strncpy(e->name, base, sizeof(e->name) - 1);
+        e->name[sizeof(e->name) - 1] = '\0';
+
+        tree.count++;
+    }
+
     (void)id_out;
     return 0;
 }
